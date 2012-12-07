@@ -72,9 +72,12 @@ name=$(cat $build/.godir)
 #p=$GOPATH/src/$name
 mkdir -p $GOPATH/bin
 mkdir -p $GOPATH/pkg
-exec=$build/go/src/$name
+mkdir -p $GOPATH/src
+execdir=$build/go/src/$name
 #mkdir -p $p
-mkdir -p $exec
+
+echo "exec dir is $execdir"
+ls -l $execdir
 
 #cp -R $build/* $p
 
