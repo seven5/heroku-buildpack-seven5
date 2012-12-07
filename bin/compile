@@ -73,12 +73,9 @@ p=$GOPATH/src/$name
 mkdir -p $p
 cp -R $build/* $p
 
-echo "build is $build"
-ls $build/go/src
-echo ---
-for i in $build/go/src
+for i in $build/go/src/*
 do
-   echo "package is $i"
+   echo package is `basename $i`
 done
 
 unset GIT_DIR # unset git dir or it will mess with goinstall
