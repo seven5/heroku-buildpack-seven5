@@ -57,7 +57,8 @@ echo "GOPATH    IS      $GOPATH"
 echo "PATH      IS      $PATH"
 echo "first     IS      $1"
 echo "second    IS      $2"
-
+ls $GOPATH
+echo ----
 if ! (which hg > /dev/null && which bzr > /dev/null)
 then
     echo -n "       Installing Virtualenv..."
