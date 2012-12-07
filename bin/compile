@@ -90,8 +90,9 @@ ls -l $GOPATH/src
 for i in $build/go/src/*
 do
    package=`basename $i`
+   cp -R $i $GOPATH/src
    echo getting in $package $i
-   (cd $i; go get -v .)
+   (cd $GOPATH/src/$package; go get -v .)
 done
 
 echo "STOP1"
