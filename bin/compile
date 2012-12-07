@@ -52,6 +52,11 @@ GOROOT=$cache/go-$ver/go export GOROOT
 GOPATH=$build/.heroku/g export GOPATH
 PATH=$GOROOT/bin:$PATH
 
+echo "GOROOT    IS      $GOROOT"
+echo "GOPATH    IS      $GOPATH"
+echo "PATH      IS      $PATH"
+echo "first     IS      $1"
+echo "second    IS      $2"
 
 if ! (which hg > /dev/null && which bzr > /dev/null)
 then
