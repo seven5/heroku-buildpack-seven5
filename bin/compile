@@ -75,7 +75,9 @@ cp -R $build/* $p
 
 for i in $build/go/src/*
 do
-   echo package is `basename $i`
+   package=`basename $i`
+   echo $package:
+   (cd $i; go get ./...)
 done
 
 unset GIT_DIR # unset git dir or it will mess with goinstall
