@@ -73,12 +73,12 @@ name=$(cat $build/.godir)
 mkdir -p $GOPATH/bin
 mkdir -p $GOPATH/pkg
 mkdir -p $GOPATH/src
-execdir=$build/go/src/$name
+#execdir=$build/go/src/$name
 #mkdir -p $p
 
-echo "exec dir is $execdir"
-ls -l $execdir
-cp -R $execdir $GOPATH/src
+#echo "exec dir is $execdir"
+#ls -l $execdir
+#cp -R $execdir $GOPATH/src
 
 #cp -R $build/* $p
 
@@ -90,7 +90,7 @@ ls -l $GOPATH/src
 for i in $build/go/src/*
 do
    package=`basename $i`
-   echo getting in $package:
+   echo getting in $package $i
    (cd $i; go get -v .)
 done
 
