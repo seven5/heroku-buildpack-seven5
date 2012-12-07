@@ -69,16 +69,19 @@ then
 fi
 
 name=$(cat $build/.godir)
-p=$GOPATH/src/$name
-mkdir -p $p
-cp -R $build/* $p
+#p=$GOPATH/src/$name
+exec=$build/go/src/$name
+#mkdir -p $p
+#cp -R $build/* $p
 
 for i in $build/go/src/*
 do
    package=`basename $i`
    echo getting in $package:
-   (cd $i; go get -v ./...)
+   (cd $i; go get -v .)
 done
+
+(cd $exec; go get -v .)
 
 unset GIT_DIR # unset git dir or it will mess with goinstall
 #echo "-----> Running: go get ./..."
