@@ -70,8 +70,12 @@ fi
 
 name=$(cat $build/.godir)
 #p=$GOPATH/src/$name
+mkdir -p $GOPATH/bin
+mkdir -p $GOPATH/pkg
 exec=$build/go/src/$name
 #mkdir -p $p
+mkdir -p $exec
+
 #cp -R $build/* $p
 
 for i in $build/go/src/*
@@ -81,7 +85,15 @@ do
    (cd $i; go get -v .)
 done
 
-(cd $exec; go get -v .)
+echo "STOP1"
+ls -l $GOPATH/pkg/*
+ls -l $GOPATH/bin/
+
+(cd $exec; go install -v .)
+
+echo "STOP2"
+ls -l $GOPATH/pkg/*
+ls -l $GOPATH/bin/
 
 unset GIT_DIR # unset git dir or it will mess with goinstall
 #echo "-----> Running: go get ./..."
