@@ -78,11 +78,14 @@ execdir=$build/go/src/$name
 
 echo "exec dir is $execdir"
 ls -l $execdir
+cp -R $execdir $GOPATH/src
 
 #cp -R $build/* $p
 
 echo "before the go get"
 ls -l $GOPATH
+echo "go src dir"
+ls -l $GOPATH/src
 
 for i in $build/go/src/*
 do
