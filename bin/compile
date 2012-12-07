@@ -77,7 +77,7 @@ for i in $build/go/src/*
 do
    package=`basename $i`
    echo getting in $package:
-   (cd $i; go get ./...)
+   (cd $i; go get -v ./...)
 done
 
 unset GIT_DIR # unset git dir or it will mess with goinstall
