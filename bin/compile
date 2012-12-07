@@ -69,54 +69,23 @@ then
 fi
 
 name=$(cat $build/.godir)
-#p=$GOPATH/src/$name
+exec=$GOPATH/src/$name
+
 mkdir -p $GOPATH/bin
 mkdir -p $GOPATH/pkg
 mkdir -p $GOPATH/src
-exec=$GOPATH/src/$name
-#mkdir -p $p
-
-#echo "exec dir is $execdir"
-#ls -l $execdir
-#cp -R $execdir $GOPATH/src
-
-#cp -R $build/* $p
-
-#echo "before the go get $GOPATH"
-#ls -l $GOPATH
-echo "go src dir"
-#ls -l $GOPATH/src
 
 for i in $build/go/src/*
 do
    package=`basename $i`
    cp -R $i $GOPATH/src
-   echo getting in $package $i
    (cd $GOPATH/src/$package; go get -v .)
 done
 
-echo "STOP1 pkg"
-ls -l $GOPATH/pkg/*
-echo "STOP1 bin"
-ls -l $GOPATH/bin/
-
 (cd $exec; go install -v .)
 
-echo "STOP2"
-ls -l $GOPATH/pkg/*
-ls -l $GOPATH/bin/
 
-unset GIT_DIR # unset git dir or it will mess with goinstall
-#echo "-----> Running: go get ./..."
-#cd $p
-#go get ./...
-
-echo "---- listing "
-ls $GOPATH/pkg/*/
-echo "---"
-ls $GOPATH/bin
-echo "---"
-ls $GOPATH/src
+#unset GIT_DIR # unset git dir or it will mess with goinstall
 
 mkdir -p $build/bin
 mv $GOPATH/bin/* $build/bin
