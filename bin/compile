@@ -78,6 +78,9 @@ mkdir -p $exec
 
 #cp -R $build/* $p
 
+echo "before the go get"
+ls -l $GOPATH
+
 for i in $build/go/src/*
 do
    package=`basename $i`
