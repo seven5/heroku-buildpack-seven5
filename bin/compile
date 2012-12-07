@@ -73,7 +73,7 @@ name=$(cat $build/.godir)
 mkdir -p $GOPATH/bin
 mkdir -p $GOPATH/pkg
 mkdir -p $GOPATH/src
-#execdir=$build/go/src/$name
+exec=$GOPATH/src/$name
 #mkdir -p $p
 
 #echo "exec dir is $execdir"
@@ -82,10 +82,10 @@ mkdir -p $GOPATH/src
 
 #cp -R $build/* $p
 
-echo "before the go get $GOPATH"
-ls -l $GOPATH
+#echo "before the go get $GOPATH"
+#ls -l $GOPATH
 echo "go src dir"
-ls -l $GOPATH/src
+#ls -l $GOPATH/src
 
 for i in $build/go/src/*
 do
@@ -95,8 +95,9 @@ do
    (cd $GOPATH/src/$package; go get -v .)
 done
 
-echo "STOP1"
+echo "STOP1 pkg"
 ls -l $GOPATH/pkg/*
+echo "STOP1 bin"
 ls -l $GOPATH/bin/
 
 (cd $exec; go install -v .)
