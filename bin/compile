@@ -82,6 +82,8 @@ do
    (cd $GOPATH/src/$package; go get -v .)
 done
 
+find $GOPATH/src -name \*.go -exec sed -i repl 's/"\(.*\)"\/\/githubme/"github.com\/seven5\/\1"/' {} \;
+
 (cd $exec; go install -v .)
 
 
