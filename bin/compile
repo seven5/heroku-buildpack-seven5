@@ -79,10 +79,10 @@ for i in $build/go/src/*
 do
    package=`basename $i`
    cp -R $i $GOPATH/src
+   find $GOPATH/src/$package -name \*.go -exec sed -i repl 's/"\(.*\)"\/\/githubme/"github.com\/seven5\/\1"/' {} \;
    (cd $GOPATH/src/$package; go get -v .)
 done
 
-find $GOPATH/src -name \*.go -exec sed -i repl 's/"\(.*\)"\/\/githubme/"github.com\/seven5\/\1"/' {} \;
 
 (cd $exec; go install -v .)
 
