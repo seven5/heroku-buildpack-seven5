@@ -79,28 +79,22 @@ for i in $build/go/src/*
 do
    package=`basename $i`
    cp -R $i $GOPATH/src
-   find $GOPATH/src/$package -name \*.go -exec sed --in-place=repl --expression='s/"\(.*\)"\/\/githubme/"github.com\/seven5\/\1"/' {} \;
+   find $GOPATH/src/$package -name \*.go -exec sed --in-place=repl --expression='s/"\(.*\)"\/\/githubme:\(.*\):/"github.com\/\2\/\1"/' {} \;
 done
 
-echo GO PATH SOURCE AT START
-ls -l $GOPATH/src
-
-echo git dir is $GIT_DIR
-echo git is `which git`
-unset GIT_DIR
-echo git dir is now ----- $GIT_DIR
-
-(cd $exec; go get -v -x .)
-echo done with go get -------
-(cd $exec; go install -v -x .)
-echo done with go install -------
-
-echo GO PATH SOURCE AT END
-ls -l $GOPATH/src
+echo 
+echo
+echo -----check hack----
 head $GOPATH/src/tiber/goog.go
+echo -------------------
 
 
-#unset GIT_DIR # unset git dir or it will mess with goinstall
+#if you don't unset GIT_DIR the calls made by go get and go install will fail
+#in very surprising ways
+unset GIT_DIR
+
+(cd $exec; go get -v .)
+(cd $exec; go install -v .)
 
 mkdir -p $build/bin
 mv $GOPATH/bin/* $build/bin
