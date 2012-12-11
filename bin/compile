@@ -82,19 +82,13 @@ do
    find $GOPATH/src/$package -name \*.go -exec sed --in-place=repl --expression='s/"\(.*\)"\/\/githubme:\(.*\):/"github.com\/\2\/\1"/' {} \;
 done
 
-echo 
-echo
-echo -----check hack----
-head $GOPATH/src/tiber/goog.go
-echo -------------------
-
 
 #if you don't unset GIT_DIR the calls made by go get and go install will fail
 #in very surprising ways
 unset GIT_DIR
 
 (cd $exec; go get -v .)
-(cd $exec; go install -v .)
+(cd $exec; go install .)
 
 mkdir -p $build/bin
 mv $GOPATH/bin/* $build/bin
