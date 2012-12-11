@@ -87,6 +87,8 @@ ls -l $GOPATH/src
 
 echo git dir is $GIT_DIR
 echo git is `which git`
+unset GIT_DIR
+echo git dir is now ----- $GIT_DIR
 
 (cd $exec; go get -v -x .)
 echo done with go get -------
