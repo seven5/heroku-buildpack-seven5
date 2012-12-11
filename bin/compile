@@ -82,7 +82,7 @@ do
    echo running github me in $GOPATH/src/$package
    find $GOPATH/src/$package -name \*.go -print
    echo done with find
-   find $GOPATH/src/$package -name \*.go -exec sed -i repl -e 's/"\(.*\)"\/\/githubme/"github.com\/seven5\/\1"/' {} \;
+   find $GOPATH/src/$package -name \*.go -exec sed --in-place=repl --expression='s/"\(.*\)"\/\/githubme/"github.com\/seven5\/\1"/' {} \;
    (cd $GOPATH/src/$package; go get -v .)
 done
 
