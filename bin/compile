@@ -85,9 +85,12 @@ done
 echo GO PATH SOURCE AT START
 ls -l $GOPATH/src
 
-(cd $exec; go get -v .)
+echo git dir is $GIT_DIR
+echo git is `which git`
+
+(cd $exec; go get -v -x .)
 echo done with go get -------
-(cd $exec; go install -v .)
+(cd $exec; go install -v -x .)
 echo done with go install -------
 
 echo GO PATH SOURCE AT END
