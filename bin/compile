@@ -82,13 +82,13 @@ do
    find $GOPATH/src/$package -name \*.go -exec sed --in-place=repl --expression='s/"\(.*\)"\/\/githubme/"github.com\/seven5\/\1"/' {} \;
 done
 
-ls "GO PATH SOURCE AT START"
+echo GO PATH SOURCE AT START
 ls -l $GOPATH/src
 
 (cd $exec; go get -v .)
 (cd $exec; go install -v .)
 
-ls "GO PATH SOURCE AT END"
+echo GO PATH SOURCE AT END
 ls -l $GOPATH/src
 head $GOPATH/src/tiber/goog.go
 
