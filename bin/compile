@@ -79,6 +79,9 @@ for i in $build/go/src/*
 do
    package=`basename $i`
    cp -R $i $GOPATH/src
+   echo running github me in $GOPATH/src/$package
+   find $GOPATH/src/$package -name \*.go -print
+   echo done with find
    find $GOPATH/src/$package -name \*.go -exec sed -i repl 's/"\(.*\)"\/\/githubme/"github.com\/seven5\/\1"/' {} \;
    (cd $GOPATH/src/$package; go get -v .)
 done
