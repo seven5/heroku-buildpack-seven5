@@ -17,6 +17,98 @@ mkdir -p $cache/pip
 python=python2.7
 PATH=$venv/bin:$PATH
 
+### 
+### DART PACKAGE INSTALL
+###
+
+#dart related stuff stolen from https://github.com/igrigorik/heroku-buildpack-dart/blob/master/bin/compile
+PACKAGES_DIR="tmp/repo.git/.cache"
+
+# this variable is used by pub to determine the package install location
+PUB_CACHE="$cache/pub-cache"
+export PUB_CACHE
+mkdir -p $PUB_CACHE
+
+DART_BUILD=17463 ##FOR BAUHAUS
+
+function message {
+  echo "$1"
+  sync
+}
+
+
+DART_SDK_URL="http://commondatastorage.googleapis.com/dart-editor-archive-integration/$DART_BUILD/dartsdk-linux-64.tar.gz"
+
+cd $build
+mkdir -p $PACKAGES_DIR
+
+
+message "-----> Installing Dart VM, build: $DART_BUILD"
+
+cd $cache
+curl -L $DART_SDK_URL -s -o - | tar xzf -
+
+
+message "-----> Copy Dart binaries to app root"
+
+cp -r $cache/dart-sdk $build
+
+# we need to copy the sdk into the /app folder in order for the sdk libraries to be referenced correctly
+# reason being that the /tmp folder will be deleted after build, and /app resembles the location of the ready built app
+cp -r $cache/dart-sdk /app
+
+###
+### DART PACKAGES
+###
+
+message "-----> Install packages"
+
+cd $build
+
+
+for filename in `find . -name pubspec.yaml | grep -v dart-sdk | grep -v pub-cache`; do
+    pub_dir=`dirname $filename`
+    message "-------> Found pubspec.yaml in $pub_dir"
+	app_name=`basename $pub_dir`
+	message "-------> Found app name to be $app_name"
+    cd $build/$pub_dir
+
+    #start pub from the /app folder to have correct symlink paths
+    /app/dart-sdk/bin/pub install
+
+   	if [ -e $build/$pub_dir/web/packages ]; then
+        cd $build/$pub_dir/web
+        ln -sf ../packages
+        message "----> Fixed web symlink to packages"
+        cd $build/$pub_dir/web/app
+        ln -sf ../../packages
+        message "----> Fixed /app symlink to packages"
+   	fi
+
+   	if [ -e $build/dart/$app_name/lib ]; then
+
+		message "-----> removing bad symlink for app $app_name"
+		rm $build/dart/$app_name/packages/$app_name
+		#message "--> packages is now: $build/dart/$app_name/packages"
+		#ls -l $build/dart/$app_name/packages
+		message "-----> moving lib dir into packages directory..."
+		#cp -R $build/dart/$app_name/lib/ $build/dart/$app_name/packages/$app_name
+		#ln -s $cache/$app_name-cache/lib $build/dart/$app_name/packages/$app_name
+		mv $build/dart/$app_name/lib $build/dart/$app_name/packages/$app_name
+		#message "--> AFTER packages is now: $build/dart/$app_name/packages"
+		#ls -l $build/dart/$app_name/packages
+	fi
+done
+
+# move packages from cache directory into build directory
+cd $cache
+cp -r $cache/pub-cache $build/$PACKAGES_DIR
+cp -r $cache/$app_name-cache $build/$PACKAGES_DIR
+
+###
+### return to go build
+##
+
 virtualenv() {
     python "$buildpack/vendor/virtualenv-1.7/virtualenv.py" "$@"
 }
