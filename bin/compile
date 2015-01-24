@@ -1,124 +1,84 @@
 #!/bin/bash
-# usage: bin/compile <build-dir> <cache-dir>
+# usage: bin/compile <build-dir> <cache-dir> <env-dir>
 
 set -eo pipefail
+
+# Go releases for Darwin beginning with 1.2rc1
+# have included more than one build, depending
+# on the specific version of Mac OS X. Try to
+# account for that, but don't try too hard.
+# This doesn't affect Heroku builds, it's only
+# for testing on Darwin systems.
+platext() {
+    case $1 in
+    go1.0*|go1.1beta*|go1.1rc*|go1.1|go1.1.*) return ;;
+    esac
+    case $(uname|tr A-Z a-z) in
+    darwin) printf %s -osx10.8 ;;
+    esac
+}
+
+# Go releases have moved to a new URL scheme
+# starting with Go version 1.2.2. Return the old
+# location for known old versions and the new
+# location otherwise.
+urlfor() {
+    ver=$1
+    file=$2
+    case $ver in
+    go1.0*|go1.1beta*|go1.1rc*|go1.1|go1.1.*|go1.2beta*|go1.2rc*|go1.2|go1.2.1)
+        echo http://go.googlecode.com/files/$file
+        ;;
+    *)
+        echo https://storage.googleapis.com/golang/$file
+        ;;
+    esac
+}
 
 mkdir -p "$1" "$2"
 build=$(cd "$1/" && pwd)
 cache=$(cd "$2/" && pwd)
-ver=${GOVERSION:-1.0.3}
-file=${GOFILE:-go$ver.$(uname|tr A-Z a-z)-amd64.tar.gz}
-url=${GOURL:-http://go.googlecode.com/files/$file}
 buildpack=$(dirname $(dirname $0))
+arch=$(uname -m|tr A-Z a-z)
+if test $arch = x86_64
+then arch=amd64
+fi
+plat=$(uname|tr A-Z a-z)-$arch
+
+#echo "-----> remove gohperjs items, they are not used on heroku"
+#rm -rf $build/pages
+#find $build/static -name \*.js.map -exec rm {} \;
 
 # Python
 venv=$cache/venv
 mkdir -p $cache/pip
 python=python2.7
-PATH=$venv/bin:$PATH
-
-### 
-### DART PACKAGE INSTALL
-###
-
-#dart related stuff stolen from https://github.com/igrigorik/heroku-buildpack-dart/blob/master/bin/compile
-PACKAGES_DIR="tmp/repo.git/.cache"
-
-# this variable is used by pub to determine the package install location
-PUB_CACHE="$cache/pub-cache"
-export PUB_CACHE
-mkdir -p $PUB_CACHE
-
-DART_BUILD=17463 ##FOR BAUHAUS
-
-function message {
-  echo "$1"
-  sync
-}
-
-
-DART_SDK_URL="http://commondatastorage.googleapis.com/dart-editor-archive-integration/$DART_BUILD/dartsdk-linux-64.tar.gz"
-
-cd $build
-mkdir -p $PACKAGES_DIR
-
-
-message "-----> Installing Dart VM, build: $DART_BUILD"
-
-cd $cache
-curl -L $DART_SDK_URL -s -o - | tar xzf -
-
-
-message "-----> Copy Dart binaries to app root"
-
-cp -r $cache/dart-sdk $build
-
-# we need to copy the sdk into the /app folder in order for the sdk libraries to be referenced correctly
-# reason being that the /tmp folder will be deleted after build, and /app resembles the location of the ready built app
-cp -r $cache/dart-sdk /app
-
-###
-### DART PACKAGES
-###
-
-message "-----> Install packages"
-
-cd $build
-
-
-for filename in `find . -name pubspec.yaml | grep -v dart-sdk | grep -v pub-cache`; do
-    pub_dir=`dirname $filename`
-    message "-------> Found pubspec.yaml in $pub_dir"
-	app_name=`basename $pub_dir`
-	message "-------> Found app name to be $app_name"
-    cd $build/$pub_dir
-
-    #start pub from the /app folder to have correct symlink paths
-    /app/dart-sdk/bin/pub install
-
-   	if [ -e $build/$pub_dir/web/packages ]; then
-        cd $build/$pub_dir/web
-        ln -sf ../packages
-        message "----> Fixed web symlink to packages"
-        cd $build/$pub_dir/web/app
-        ln -sf ../../packages
-        message "----> Fixed /app symlink to packages"
-   	fi
-
-   	if [ -e $build/dart/$app_name/lib ]; then
-
-		message "-----> removing bad symlink for app $app_name"
-		rm $build/dart/$app_name/packages/$app_name
-		#message "--> packages is now: $build/dart/$app_name/packages"
-		#ls -l $build/dart/$app_name/packages
-		message "-----> moving lib dir into packages directory..."
-		#cp -R $build/dart/$app_name/lib/ $build/dart/$app_name/packages/$app_name
-		#ln -s $cache/$app_name-cache/lib $build/dart/$app_name/packages/$app_name
-		mv $build/dart/$app_name/lib $build/dart/$app_name/packages/$app_name
-		#message "--> AFTER packages is now: $build/dart/$app_name/packages"
-		#ls -l $build/dart/$app_name/packages
-	fi
-done
-
-# move packages from cache directory into build directory
-cd $cache
-cp -r $cache/pub-cache $build/$PACKAGES_DIR
-cp -r $cache/$app_name-cache $build/$PACKAGES_DIR
-
-###
-### return to go build
-##
+PATH=$buildpack/$plat/bin:$venv/bin:$PATH
 
 virtualenv() {
-    python "$buildpack/vendor/virtualenv-1.7/virtualenv.py" "$@"
+    python "$buildpack/vendor/virtualenv-1.11.6/virtualenv.py" "$@"
 }
 
-if ! test -f $build/.godir
+if test -f $build/Godeps
 then
-    echo >&2 " !     A .godir is required."
-    echo >&2 " !     See https://gist.github.com/299535bbf56bf3016cba for instructions."
+    name=$(<$build/Godeps jq -r .ImportPath)
+    ver=$(<$build/Godeps jq -r .GoVersion)
+elif test -d $build/Godeps
+then
+    name=$(<$build/Godeps/Godeps.json jq -r .ImportPath)
+    ver=$(<$build/Godeps/Godeps.json jq -r .GoVersion)
+elif test -f $build/.godir
+then
+    name=$(cat $build/.godir)
+    ver=go${GOVERSION:-1.3}
+else
+    echo >&2 " !     A .godir is required. For instructions:"
+    echo >&2 " !     http://mmcgrana.github.io/2012/09/getting-started-with-go-on-heroku"
     exit 1
 fi
+
+file=${GOFILE:-$ver.$(uname|tr A-Z a-z)-amd64$(platext $ver).tar.gz}
+url=${GOURL:-$(urlfor $ver $file)}
 
 if test -e $build/bin && ! test -d $build/bin
 then
@@ -126,62 +86,85 @@ then
     exit 1
 fi
 
-if test -d $cache/go-$ver/go
+if test -d $cache/$ver/go
 then
-    echo "-----> Using Go $ver"
+    echo "-----> Using $ver"
 else
     rm -rf $cache/* # be sure not to build up cruft
-    mkdir -p $cache/go-$ver
-    cd $cache/go-$ver
-    echo -n "-----> Installing Go $ver..."
+    mkdir -p $cache/$ver
+    cd $cache/$ver
+    echo -n "-----> Installing $ver..."
     curl -sO $url
     tar zxf $file
     rm -f $file
     echo " done"
 fi
 
-GOROOT=$cache/go-$ver/go export GOROOT
+mkdir -p $build/bin
+GOBIN=$build/bin export GOBIN
+GOROOT=$cache/$ver/go export GOROOT
 GOPATH=$build/.heroku/g export GOPATH
 PATH=$GOROOT/bin:$PATH
 
-if ! (which hg > /dev/null && which bzr > /dev/null)
+if  !(test -d $build/Godeps || (which hg >/dev/null && which bzr >/dev/null))
 then
+    echo
+    echo "       Tired of waiting for bzr and hg?"
+    echo "       Try github.com/kr/godep for faster deploys."
+    echo
+
     echo -n "       Installing Virtualenv..."
     virtualenv --python $python --distribute --never-download --prompt='(venv) ' $venv > /dev/null 2>&1
     . $venv/bin/activate > /dev/null 2>&1
     echo " done"
 
     echo -n "       Installing Mercurial..."
-    pip install --use-mirrors mercurial > /dev/null 2>&1
+    pip install mercurial > /dev/null 2>&1
     echo " done"
 
     echo -n "       Installing Bazaar..."
-    pip install --use-mirrors bzr > /dev/null 2>&1
+    pip install bzr > /dev/null 2>&1
     echo " done"
 fi
 
-name=$(cat $build/.godir)
-exec=$GOPATH/src/$name
+p=$GOPATH/src/$name
+mkdir -p $p
+cp -R $build/* $p
 
-mkdir -p $GOPATH/bin
-mkdir -p $GOPATH/pkg
-mkdir -p $GOPATH/src
+# allow apps to specify cgo flags and set up /app symlink so things like CGO_CFLAGS=-I/app/... work
+env_dir="$3"
+if [ -d "$env_dir" ]
+then
+    ln -sfn $build /app/code
+    for key in CGO_CFLAGS CGO_CPPFLAGS CGO_CXXFLAGS CGO_LDFLAGS GO_GIT_DESCRIBE_SYMBOL
+    do
+        if [ -f "$env_dir/$key" ]
+        then
+            export "$key=$(cat "$env_dir/$key")"
+        fi
+    done
+fi
 
-for i in $build/go/src/*
-do
-   package=`basename $i`
-   cp -R $i $GOPATH/src
-   find $GOPATH/src/$package -name \*.go -exec sed --in-place=repl --expression='s/"\(.*\)"\/\/githubme:\(.*\):/"github.com\/\2\/\1"/' {} \;
-done
+FLAGS=(-tags heroku)
+if test -f "$env_dir/GO_GIT_DESCRIBE_SYMBOL"
+then
+    git_describe=$(git describe --tags --always)
+    FLAGS=(${FLAGS[@]} -ldflags "-X $GO_GIT_DESCRIBE_SYMBOL $git_describe")
+fi
 
+unset GIT_DIR # unset git dir or it will mess with goinstall
+cd $p
+if test -e $build/Godeps
+then
+    echo "-----> Running: godep go install ${FLAGS[@]} ./..."
+    godep go install "${FLAGS[@]}" ./...
+else
+    echo "-----> Running: go get ${FLAGS[@]} ./..."
+    go get "${FLAGS[@]}" ./...
+fi
 
-#if you don't unset GIT_DIR the calls made by go get and go install will fail
-#in very surprising ways
-unset GIT_DIR
-
-(cd $exec; go get -v .)
-(cd $exec; go install .)
-
-mkdir -p $build/bin
-mv $GOPATH/bin/* $build/bin
 rm -rf $build/.heroku
+
+mkdir -p $build/.profile.d
+echo 'PATH=$PATH:$HOME/bin' > $build/.profile.d/go.sh
+
