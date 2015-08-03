@@ -208,7 +208,7 @@ then
     if test -e $build/pages/Makefile; then
         start "Compiling client side code in pages"
         pushd pages
-        GOPHERJS="../$GOPHERJS" PAGEGEN="$PAGEGEN" make
+        GOPHERJS="$GOPHERJS" PAGEGEN="$PAGEGEN" make
         popd
         finished
     fi
