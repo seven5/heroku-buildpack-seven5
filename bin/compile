@@ -208,7 +208,8 @@ then
     if test -e $build/pages/Makefile; then
         start "Compiling client side code in pages"
         pushd pages
-        GOPHERJS="$GOPHERJS" PAGEGEN="$PAGEGEN" make
+        mkdir $build/static
+        TARGET_DIR="$build/static" GOPHERJS="$GOPHERJS" PAGEGEN="$PAGEGEN" make
         echo "----------"
         echo "PWD IS `pwd`"
         ls -l ../static/en/web/
