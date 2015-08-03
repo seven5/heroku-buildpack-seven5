@@ -209,10 +209,10 @@ then
         start "Compiling client side code in pages"
         pushd pages
         GOPHERJS="$GOPHERJS" PAGEGEN="$PAGEGEN" make
-        popd
         echo "----------"
         echo "PWD IS `pwd`"
         ls -l ../static/en/web/
+        popd
         finished
     fi
 else
