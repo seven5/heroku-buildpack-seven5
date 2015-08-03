@@ -147,6 +147,11 @@ GOPHERJSOPTS="-m"
 GOPHERJS="$GOBIN/gopherjs $GOPHERJSOPTS"
 PAGEGEN=$GOBIN/pagegen
 
+echo "GOPHERJS is $GOPHERJS"
+echo "-------"
+find / -name gopherjs -type f
+echo "-------"
+
 if ! (test -d $build/Godeps || (which hg >/dev/null && which bzr >/dev/null))
 then
     echo
