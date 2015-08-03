@@ -209,10 +209,7 @@ then
         start "Compiling client side code in pages"
         pushd pages
         mkdir -p $build/static
-        TARGET_DIR="$build/static" GOPHERJS="$GOPHERJS" PAGEGEN="$PAGEGEN" make
-        echo "----------"
-        echo "PWD IS `pwd`"
-        ls -l ../static/en/web/
+        TARGET_DIR="$build/static/en/web" GOPHERJS="$GOPHERJS" PAGEGEN="$PAGEGEN" make
         popd
         finished
     fi
