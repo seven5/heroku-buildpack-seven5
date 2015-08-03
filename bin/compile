@@ -210,6 +210,8 @@ then
         pushd pages
         GOPHERJS="$GOPHERJS" PAGEGEN="$PAGEGEN" make
         popd
+        echo "----------"
+        ls -l ../static/en/web/
         finished
     fi
 else
