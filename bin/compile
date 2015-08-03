@@ -211,6 +211,7 @@ then
         GOPHERJS="$GOPHERJS" PAGEGEN="$PAGEGEN" make
         popd
         echo "----------"
+        echo "PWD IS `pwd`"
         ls -l ../static/en/web/
         finished
     fi
